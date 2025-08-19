@@ -42,7 +42,7 @@ a:hover { color: #fff; text-decoration: underline; }
   align-items: center;
   gap: 16px;
   padding: 18px 32px;
-  margin: -24px calc(50% - 50vw) 24px;
+  margin: -24px -24px 24px;
   background: #000;
   border-bottom: 1px solid rgba(255,255,255,0.12);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -97,7 +97,7 @@ a:hover { color: #fff; text-decoration: underline; }
     grid-template-columns: auto 1fr auto;
     gap: 12px;
     padding: 16px 20px;
-    margin: -16px calc(50% - 50vw) 16px;
+    margin: -16px -16px 16px;
   }
   
   .header__nav {
@@ -128,7 +128,7 @@ a:hover { color: #fff; text-decoration: underline; }
   .header {
     grid-template-columns: auto 1fr auto;
     padding: 12px 16px;
-    margin: -12px calc(50% - 50vw) 12px;
+    margin: -12px -12px 12px;
     gap: 8px;
   }
   
@@ -155,7 +155,7 @@ a:hover { color: #fff; text-decoration: underline; }
   .header {
     grid-template-columns: auto 1fr auto;
     padding: 10px 12px;
-    margin: -10px calc(50% - 50vw) 10px;
+    margin: -10px -10px 10px;
   }
   
   .header__brand a {
@@ -586,10 +586,18 @@ a:hover { color: #fff; text-decoration: underline; }
   }
   
   .products__nav {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     min-width: 44px;
     min-height: 44px;
+  }
+  
+  .products__nav--left {
+    left: -22px;
+  }
+  
+  .products__nav--right {
+    right: -22px;
   }
 }
 
@@ -599,8 +607,18 @@ a:hover { color: #fff; text-decoration: underline; }
   }
   
   .products__nav {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  .products__nav--left {
+    left: -20px;
+  }
+  
+  .products__nav--right {
+    right: -20px;
   }
 }
 
@@ -610,8 +628,18 @@ a:hover { color: #fff; text-decoration: underline; }
   }
   
   .products__nav {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  .products__nav--left {
+    left: -18px;
+  }
+  
+  .products__nav--right {
+    right: -18px;
   }
 }
 
@@ -634,42 +662,144 @@ a:hover { color: #fff; text-decoration: underline; }
 }
 
 .products__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
   gap: 24px;
   margin-top: 24px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  padding: 0 20px;
 }
 
 /* Mobile responsive products grid */
 @media (max-width: 768px) {
   .products__grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-top: 20px;
+    padding: 0 16px;
   }
 }
 
 @media (max-width: 600px) {
   .products__grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-top: 16px;
+    padding: 0 12px;
   }
 }
 
 @media (max-width: 480px) {
   .products__grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-top: 16px;
+    padding: 0 10px;
   }
 }
 
 @media (max-width: 360px) {
   .products__grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-top: 12px;
+    padding: 0 8px;
+  }
+}
+
+/* Mobile responsive product cards */
+@media (max-width: 768px) {
+  .product-card {
+    width: 180px;
+    min-width: 180px;
+  }
+  
+  .product-card__image {
+    height: 160px;
+  }
+  
+  .product-card__body {
+    padding: 10px;
+    gap: 6px;
+  }
+  
+  .product-card__title {
+    font-size: 14px;
+  }
+  
+  .product-card__price {
+    font-size: 16px;
+  }
+  
+  .product-card__actions {
+    gap: 6px;
+  }
+  
+  .product-card__actions .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-card {
+    width: 160px;
+    min-width: 160px;
+  }
+  
+  .product-card__image {
+    height: 140px;
+  }
+  
+  .product-card__body {
+    padding: 8px;
+    gap: 4px;
+  }
+  
+  .product-card__title {
+    font-size: 13px;
+  }
+  
+  .product-card__price {
+    font-size: 15px;
+  }
+  
+  .product-card__actions {
+    gap: 4px;
+  }
+  
+  .product-card__actions .btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 360px) {
+  .product-card {
+    width: 140px;
+    min-width: 140px;
+  }
+  
+  .product-card__image {
+    height: 120px;
+  }
+  
+  .product-card__body {
+    padding: 6px;
+    gap: 3px;
+  }
+  
+  .product-card__title {
+    font-size: 12px;
+  }
+  
+  .product-card__price {
+    font-size: 14px;
+  }
+  
+  .product-card__actions .btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    min-height: 28px;
   }
 }
 
@@ -693,7 +823,8 @@ a:hover { color: #fff; text-decoration: underline; }
 
 .product-card {
   width: 220px;
-  flex: 0 0 220px;
+  min-width: 220px;
+  flex-shrink: 0;
   scroll-snap-align: start;
   transition: transform 0.2s ease;
   display: flex;
@@ -805,6 +936,28 @@ input[type="range"] { width: 100%; }
   border-top: 1px solid rgba(255,255,255,0.15);
   color: #fff;
   text-align: center;
+}
+
+/* Mobile responsive footer */
+@media (max-width: 768px) {
+  .footer {
+    margin: 32px 0 0;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    margin: 24px 0 0;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .footer {
+    margin: 20px 0 0;
+    padding: 12px;
+  }
 }
 
 /* Profile Form */
@@ -1564,7 +1717,7 @@ input[type="range"] { width: 100%; }
     border-radius: 12px;
     padding: 40px 20px;
     min-height: 300px;
-    margin: 0 16px;
+    margin: 0;
   }
   
   .hero__title {
@@ -1585,7 +1738,7 @@ input[type="range"] { width: 100%; }
     border-radius: 8px;
     padding: 32px 16px;
     min-height: 250px;
-    margin: 0 12px;
+    margin: 0;
   }
   
   .hero__title {
@@ -1606,7 +1759,7 @@ input[type="range"] { width: 100%; }
     border-radius: 6px;
     padding: 24px 12px;
     min-height: 200px;
-    margin: 0 8px;
+    margin: 0;
   }
   
   .hero__title {
@@ -1625,9 +1778,8 @@ input[type="range"] { width: 100%; }
 @media (max-width: 360px) {
   .hero {
     border-radius: 4px;
-    padding: 20px 10px;
     min-height: 180px;
-    margin: 0 6px;
+    margin: 0;
   }
   
   .hero__title {
