@@ -11,7 +11,9 @@ export default function Header() {
 			<div className="header__brand">
 				<a href="#" aria-label="UNCIEL BRAND Home">UNCIEL BRAND</a>
 			</div>
-			<nav className="header__nav" aria-label="Primary"></nav>
+			<div className="header__center">
+				<nav className="header__nav" aria-label="Primary"></nav>
+			</div>
 			<div className="header__actions">
 				<form className="search" role="search">
 					<i className="bi bi-search" aria-hidden="true"></i>
