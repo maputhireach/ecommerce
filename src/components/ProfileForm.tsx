@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNotifications } from '../contexts/NotificationContext'
 
 interface ProfileFormProps {
 	isOpen: boolean
@@ -17,6 +18,7 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 		zipCode: '',
 		country: ''
 	})
+	const { addNotification } = useNotifications()
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target
@@ -29,6 +31,15 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
 		console.log('Profile updated:', formData)
+		
+		// Show success notification
+		addNotification({
+			type: 'success',
+			title: 'Profile Saved!',
+			message: 'Your profile information has been updated successfully.',
+			duration: 4000
+		})
+		
 		onClose()
 	}
 

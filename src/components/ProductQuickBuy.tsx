@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import type { Product } from '../types'
+import { useCart } from '../contexts/CartContext'
+import { useNotifications } from '../contexts/NotificationContext'
 
 type Props = {
 	open: boolean
@@ -42,10 +44,9 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
 	)
 }
 
-import { useCart } from '../contexts/CartContext'
-
 export default function ProductQuickBuy({ open, product, onClose }: Props) {
 	const { addItem, openCart } = useCart()
+	const { addNotification } = useNotifications()
 	const [quantity, setQuantity] = useState<number>(1)
 	const [step, setStep] = useState<'product' | 'profile'>('product')
 	const [profileData, setProfileData] = useState<ProfileData>({
@@ -83,6 +84,14 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 			profile: profileData
 		})
 		
+		// Show success notification
+		addNotification({
+			type: 'success',
+			title: 'Purchase Complete!',
+			message: `Your order for ${product?.name} has been placed successfully.`,
+			duration: 5000
+		})
+		
 		// Reset form and close modal
 		setStep('product')
 		setProfileData({
@@ -90,6 +99,22 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 			phone: ''
 		})
 		onClose()
+	}
+
+	const handleAddToCart = () => {
+		if (product) {
+			addItem(product, quantity)
+			openCart()
+			onClose()
+			
+			// Show success notification
+			addNotification({
+				type: 'success',
+				title: 'Added to Cart!',
+				message: `${product.name} (${quantity} ${quantity === 1 ? 'item' : 'items'}) has been added to your cart.`,
+				duration: 3000
+			})
+		}
 	}
 
 	const resetForm = () => {
@@ -173,7 +198,7 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 				<strong>${total.toFixed(2)}</strong>
 			</div>
 			<div className="modal__footer">
-				<button className="btn btn--secondary" onClick={() => { if (product) { addItem(product, quantity); openCart(); onClose() } }}>
+				<button className="btn btn--secondary" onClick={handleAddToCart}>
 					<i className="bi bi-bag-plus"></i> Add to Cart
 				</button>
 				<button className="btn btn--primary" onClick={handleBuyNow}>

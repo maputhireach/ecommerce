@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import type { Product } from '../types'
 import ProductQuickBuy from './ProductQuickBuy'
 import { useCart } from '../contexts/CartContext'
+import { useNotifications } from '../contexts/NotificationContext'
 
 export default function ProductsGrid() {
 	const { addItem, openCart } = useCart()
+	const { addNotification } = useNotifications()
 	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 	const [isQuickBuyOpen, setIsQuickBuyOpen] = useState(false)
 	const products: Product[] = useMemo(
@@ -75,6 +77,19 @@ export default function ProductsGrid() {
 		}
 	}
 
+	const handleAddToCart = (product: Product) => {
+		addItem(product, 1)
+		openCart()
+		
+		// Show success notification
+		addNotification({
+			type: 'success',
+			title: 'Added to Cart!',
+			message: `${product.name} has been added to your cart.`,
+			duration: 3000
+		})
+	}
+
 	return (
 		<section id="products" className="products">
 			<h2 className="section-title">Featured Products</h2>
@@ -103,10 +118,7 @@ export default function ProductsGrid() {
 									<button
 										className="btn btn--primary"
 										type="button"
-										onClick={() => {
-											addItem(p, 1)
-											openCart()
-										}}
+										onClick={() => handleAddToCart(p)}
 									>
 										Add to Cart
 									</button>

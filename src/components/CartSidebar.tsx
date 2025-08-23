@@ -1,4 +1,5 @@
 import { useCart } from '../contexts/CartContext'
+import { useNotifications } from '../contexts/NotificationContext'
 import { useState, useEffect } from 'react'
 
 type ProfileData = {
@@ -8,6 +9,7 @@ type ProfileData = {
 
 export default function CartSidebar() {
 	const { items, isOpen, closeCart, removeItem, setQuantity, subtotal } = useCart()
+	const { addNotification } = useNotifications()
 	const [step, setStep] = useState<'cart' | 'checkout'>('cart')
 	const [profileData, setProfileData] = useState<ProfileData>({
 		email: '',
@@ -51,6 +53,14 @@ export default function CartSidebar() {
 			items,
 			subtotal,
 			profile: profileData
+		})
+		
+		// Show success notification
+		addNotification({
+			type: 'success',
+			title: 'Order Complete!',
+			message: `Your order for ${items.length} ${items.length === 1 ? 'item' : 'items'} has been placed successfully.`,
+			duration: 5000
 		})
 		
 		// Reset form and close modal

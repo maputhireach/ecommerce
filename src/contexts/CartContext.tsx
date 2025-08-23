@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { Product } from '../types'
+import { useNotifications } from './NotificationContext'
 
 export type CartItem = {
 	product: Product
@@ -23,6 +24,7 @@ const CartContext = createContext<CartContextValue | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
 	const [items, setItems] = useState<CartItem[]>([])
 	const [isOpen, setIsOpen] = useState(false)
+	const { addNotification } = useNotifications()
 
 	function openCart() { setIsOpen(true) }
 	function closeCart() { setIsOpen(false) }
@@ -38,14 +40,54 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 			}
 			return [...prev, { product, quantity }]
 		})
+
+		// Show success notification
+		addNotification({
+			type: 'success',
+			title: 'Added to Cart!',
+			message: `${product.name} has been added to your cart.`,
+			duration: 3000
+		})
 	}
 
 	function removeItem(productId: string) {
+		const itemToRemove = items.find(item => item.product.id === productId)
 		setItems((prev) => prev.filter((it) => it.product.id !== productId))
+
+		// Show info notification
+		if (itemToRemove) {
+			addNotification({
+				type: 'info',
+				title: 'Removed from Cart',
+				message: `${itemToRemove.product.name} has been removed from your cart.`,
+				duration: 3000
+			})
+		}
 	}
 
 	function setQuantity(productId: string, quantity: number) {
+		const oldQuantity = items.find(item => item.product.id === productId)?.quantity || 0
 		setItems((prev) => prev.map((it) => (it.product.id === productId ? { ...it, quantity: Math.max(1, quantity) } : it)))
+
+		// Show notification for quantity changes
+		const item = items.find(item => item.product.id === productId)
+		if (item && quantity !== oldQuantity) {
+			if (quantity > oldQuantity) {
+				addNotification({
+					type: 'success',
+					title: 'Quantity Updated',
+					message: `Increased ${item.product.name} quantity to ${quantity}.`,
+					duration: 2500
+				})
+			} else if (quantity < oldQuantity) {
+				addNotification({
+					type: 'info',
+					title: 'Quantity Updated',
+					message: `Decreased ${item.product.name} quantity to ${quantity}.`,
+					duration: 2500
+				})
+			}
+		}
 	}
 
 	const subtotal = useMemo(() => {
