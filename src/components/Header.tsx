@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useCart } from '../contexts/CartContext'
-import { ApiService } from '../services/api'
 import ProfileForm from './ProfileForm'
 
 export default function Header() {
 	const { toggleCart } = useCart()
 	const [isProfileOpen, setIsProfileOpen] = useState(false)
 	const location = useLocation()
-	const isAuthenticated = ApiService.isAuthenticated()
 
 	return (
 		<header className="header">
@@ -52,5 +50,3 @@ export default function Header() {
 		</header>
 	)
 }
-
-
