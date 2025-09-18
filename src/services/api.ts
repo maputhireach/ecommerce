@@ -1,5 +1,30 @@
 // API service for communicating with backend
-const API_BASE_URL = 'http://localhost:5000/api';
+// Environment-aware API configuration
+const getApiBaseUrl = () => {
+  // Use environment variable if available
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Fallback logic for different environments
+  if (import.meta.env.PROD) {
+    // Production: Try to detect the backend URL
+    // Option 1: Same domain (if backend and frontend are on same server)
+    return `${window.location.origin}/api`;
+    
+    // Option 2: Different domain (uncomment and modify as needed)
+    // return 'https://your-backend-domain.com/api';
+  } else {
+    // Development: Use localhost
+    return 'http://localhost:5000/api';
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Debug logging
+console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🌍 Environment:', import.meta.env.MODE);
 
 export class ApiService {
   private static getAuthHeaders(): Record<string, string> {

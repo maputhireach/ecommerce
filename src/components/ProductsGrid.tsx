@@ -5,8 +5,6 @@ import { useCart } from '../contexts/CartContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { ApiService } from '../services/api'
 
-const API_BASE_URL = 'http://localhost:5000/api'
-
 export default function ProductsGrid() {
 	const { addItem, openCart } = useCart()
 	const { addNotification } = useNotifications()
@@ -35,8 +33,7 @@ export default function ProductsGrid() {
 				}
 			} catch (err) {
 				console.error('Failed to fetch products:', err)
-				console.log('Backend URL:', API_BASE_URL)
-				setError(`API connection failed - Using sample data. Check if backend is running on port 5000.`)
+				setError(`API connection failed - Using sample data. Backend may be unreachable.`)
 				
 				// Fallback to sample data if API fails
 				setProducts([
