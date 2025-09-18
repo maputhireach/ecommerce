@@ -33,7 +33,8 @@ export default function ProductsGrid() {
 				}
 			} catch (err) {
 				console.error('Failed to fetch products:', err)
-				setError(`API connection failed - Using sample data. Backend may be unreachable.`)
+				console.log('API Base URL:', 'http://localhost:5000/api')
+				setError(`API connection failed - Using sample data. Check if backend is running on port 5000.`)
 				
 				// Fallback to sample data if API fails
 				setProducts([

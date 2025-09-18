@@ -23,14 +23,12 @@ export default function Header() {
 					>
 						Home
 					</Link>
-					{isAuthenticated && (
-						<Link 
-							to="/orders" 
-							className={location.pathname === '/orders' ? 'active' : ''}
-						>
-							<i className="bi bi-clock-history"></i> Orders
-						</Link>
-					)}
+					<Link 
+						to="/orders" 
+						className={location.pathname === '/orders' ? 'active' : ''}
+					>
+						<i className="bi bi-clock-history"></i> Orders
+					</Link>
 				</nav>
 			</div>
 			<div className="header__actions">
