@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { store } from '../models/inMemoryStore';
+import { mongoService } from '../models/mongoService';
 import { AddToCartRequest, ApiResponse } from '../types';
 
 export const getCart = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const cartItems = await store.getCartByUserId(userId);
+    const cartItems = await mongoService.getCartByUserId(userId);
     
     res.json({
       success: true,
@@ -34,7 +34,7 @@ export const addToCart = async (req: Request, res: Response) => {
     }
 
     // Check if product exists and has sufficient stock
-    const product = await store.getProductById(productId);
+    const product = await mongoService.getProductById(productId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -49,7 +49,7 @@ export const addToCart = async (req: Request, res: Response) => {
       } as ApiResponse<null>);
     }
 
-    const cartItem = await store.addToCart(userId, productId, quantity);
+    const cartItem = await mongoService.addToCart(userId, productId, quantity);
     
     res.status(201).json({
       success: true,
@@ -71,7 +71,7 @@ export const removeFromCart = async (req: Request, res: Response) => {
     const userId = req.user!.id;
 
     // Get cart item to verify ownership
-    const cartItems = await store.getCartByUserId(userId);
+    const cartItems = await mongoService.getCartByUserId(userId);
     const cartItem = cartItems.find(item => item.id === id);
 
     if (!cartItem) {
@@ -81,7 +81,7 @@ export const removeFromCart = async (req: Request, res: Response) => {
       } as ApiResponse<null>);
     }
 
-    const success = await store.removeFromCart(id);
+    const success = await mongoService.removeFromCart(id);
     
     if (success) {
       res.json({
@@ -106,7 +106,7 @@ export const removeFromCart = async (req: Request, res: Response) => {
 export const clearCart = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    await store.clearUserCart(userId);
+    await mongoService.clearUserCart(userId);
     
     res.json({
       success: true,

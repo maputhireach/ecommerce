@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
 import { config } from './config';
-import { store } from './models/inMemoryStore';
+import { connectToDatabase } from './config/database';
+import { mongoService } from './models/mongoService';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -28,6 +30,30 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
+
+// MongoDB Viewer Route
+app.get('/mongo-viewer', (req, res) => {
+  res.sendFile(path.join(__dirname, '../mongo-viewer.html'));
+});
+
+// Admin API endpoints for data viewing
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await mongoService.getAllUsers();
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch users' });
+  }
+});
+
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await mongoService.getAllOrders();
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch orders' });
+  }
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -58,8 +84,11 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 // Start server
 const startServer = async () => {
   try {
+    // Connect to MongoDB
+    await connectToDatabase();
+    
     // Seed initial data
-    await store.seedData();
+    await mongoService.seedData();
     console.log('✅ Initial data seeded successfully');
     
     app.listen(config.port, () => {
@@ -91,3 +120,4 @@ const startServer = async () => {
 };
 
 startServer();
+

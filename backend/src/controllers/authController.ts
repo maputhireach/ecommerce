@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { store } from '../models/inMemoryStore';
+import { mongoService } from '../models/mongoService';
 import { config } from '../config';
 import { UserLoginRequest, UserRegisterRequest, ApiResponse } from '../types';
 
@@ -10,7 +10,7 @@ export const register = async (req: Request, res: Response) => {
     const { email, password, firstName, lastName }: UserRegisterRequest = req.body;
 
     // Check if user already exists
-    const existingUser = await store.findUserByEmail(email);
+    const existingUser = await mongoService.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -22,7 +22,7 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, config.bcryptRounds);
 
     // Create user
-    const user = await store.createUser({
+    const user = await mongoService.createUser({
       email,
       password: hashedPassword,
       firstName,
@@ -63,7 +63,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password }: UserLoginRequest = req.body;
 
     // Find user by email
-    const user = await store.findUserByEmail(email);
+    const user = await mongoService.findUserByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,

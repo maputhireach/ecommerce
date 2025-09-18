@@ -1,0 +1,66 @@
+# E-commerce API Testing Guide
+
+## 1. Health Check
+GET http://localhost:5000/health
+
+## 2. User Registration (Creates profile in MongoDB)
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "student@setec.edu",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+## 3. User Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "student@setec.edu",
+  "password": "password123"
+}
+
+## 4. Get All Products
+GET http://localhost:5000/api/products
+
+## 5. Add Item to Cart (requires token from login)
+POST http://localhost:5000/api/cart/add
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "productId": "PRODUCT_ID_FROM_STEP_4",
+  "quantity": 2
+}
+
+## 6. View Cart
+GET http://localhost:5000/api/cart
+Authorization: Bearer YOUR_TOKEN_HERE
+
+## 7. Create Order (saves to MongoDB)
+POST http://localhost:5000/api/orders
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "items": [
+    {
+      "productId": "PRODUCT_ID_FROM_STEP_4",
+      "quantity": 1
+    }
+  ],
+  "shippingAddress": {
+    "street": "123 SETEC Street",
+    "city": "Phnom Penh",
+    "state": "Phnom Penh",
+    "zipCode": "12000",
+    "country": "Cambodia"
+  }
+}
+
+## 8. View My Orders
+GET http://localhost:5000/api/orders/my-orders
+Authorization: Bearer YOUR_TOKEN_HERE

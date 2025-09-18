@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { store } from '../models/inMemoryStore';
+import { mongoService } from '../models/mongoService';
 import { CreateOrderRequest, ApiResponse, OrderStatus } from '../types';
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -19,7 +19,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const orderItems = [];
 
     for (const item of items) {
-      const product = await store.getProductById(item.productId);
+      const product = await mongoService.getProductById(item.productId);
       if (!product) {
         return res.status(400).json({
           success: false,
@@ -44,7 +44,7 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     // Create order
-    const order = await store.createOrder({
+    const order = await mongoService.createOrder({
       userId,
       status: OrderStatus.PENDING,
       totalAmount,
@@ -58,14 +58,14 @@ export const createOrder = async (req: Request, res: Response) => {
 
     // Update stock quantities
     for (const item of items) {
-      const success = await store.updateProductStock(item.productId, item.quantity);
+      const success = await mongoService.updateProductStock(item.productId, item.quantity);
       if (!success) {
         console.error(`Failed to update stock for product ${item.productId}`);
       }
     }
 
     // Clear user's cart after successful order
-    await store.clearUserCart(userId);
+    await mongoService.clearUserCart(userId);
 
     res.status(201).json({
       success: true,
@@ -85,7 +85,7 @@ export const createOrder = async (req: Request, res: Response) => {
 export const getUserOrders = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const orders = await store.getOrdersByUserId(userId);
+    const orders = await mongoService.getOrdersByUserId(userId);
     
     res.json({
       success: true,
@@ -114,7 +114,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       } as ApiResponse<null>);
     }
 
-    const updatedOrder = await store.updateOrderStatus(id, status);
+    const updatedOrder = await mongoService.updateOrderStatus(id, status);
     
     if (!updatedOrder) {
       return res.status(404).json({

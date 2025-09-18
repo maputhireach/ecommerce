@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import type { Product } from '../types'
 import { useCart } from '../contexts/CartContext'
 import { useNotifications } from '../contexts/NotificationContext'
+import { ApiService } from '../services/api'
 
 type Props = {
 	open: boolean
@@ -12,6 +13,13 @@ type Props = {
 type ProfileData = {
 	email: string
 	phone: string
+	firstName: string
+	lastName: string
+	street: string
+	city: string
+	state: string
+	zipCode: string
+	country: string
 }
 
 function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
@@ -51,7 +59,14 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 	const [step, setStep] = useState<'product' | 'profile'>('product')
 	const [profileData, setProfileData] = useState<ProfileData>({
 		email: '',
-		phone: ''
+		phone: '',
+		firstName: '',
+		lastName: '',
+		street: '',
+		city: '',
+		state: '',
+		zipCode: '',
+		country: 'United States'
 	})
 
 	const total = useMemo(() => {
@@ -75,30 +90,72 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 		setStep('product')
 	}
 
-	const handleCompletePurchase = () => {
-		// Here you would typically send the order to your backend
-		console.log('Order completed:', {
-			product,
-			quantity,
-			total,
-			profile: profileData
-		})
-		
-		// Show success notification
-		addNotification({
-			type: 'success',
-			title: 'Purchase Complete!',
-			message: `Your order for ${product?.name} has been placed successfully.`,
-			duration: 5000
-		})
-		
-		// Reset form and close modal
-		setStep('product')
-		setProfileData({
-			email: '',
-			phone: ''
-		})
-		onClose()
+	const handleCompletePurchase = async () => {
+		try {
+			// Check if user is authenticated
+			if (!ApiService.isAuthenticated()) {
+				addNotification({
+					type: 'error',
+					title: 'Authentication Required',
+					message: 'Please log in to complete your purchase.',
+					duration: 4000
+				})
+				return
+			}
+
+			// Validate required fields
+			if (!profileData.email || !profileData.firstName || !profileData.lastName || 
+			    !profileData.street || !profileData.city || !profileData.state || !profileData.zipCode) {
+				addNotification({
+					type: 'error',
+					title: 'Missing Information',
+					message: 'Please fill in all required fields.',
+					duration: 4000
+				})
+				return
+			}
+
+			if (!product) return
+
+			// Create order data
+			const orderData = {
+				items: [{
+					productId: product.id,
+					quantity: quantity
+				}],
+				shippingAddress: {
+					street: profileData.street,
+					city: profileData.city,
+					state: profileData.state,
+					zipCode: profileData.zipCode,
+					country: profileData.country
+				}
+			}
+
+			// Create the order
+			const order = await ApiService.createOrder(orderData)
+			
+			// Show success notification
+			addNotification({
+				type: 'success',
+				title: 'Order Placed Successfully!',
+				message: `Your order for ${product.name} has been placed. Order ID: ${order.id.slice(-8).toUpperCase()}`,
+				duration: 6000
+			})
+			
+			// Reset form and close modal
+			resetForm()
+			onClose()
+			
+		} catch (error) {
+			console.error('Order creation failed:', error)
+			addNotification({
+				type: 'error',
+				title: 'Order Failed',
+				message: 'There was an error placing your order. Please try again.',
+				duration: 5000
+			})
+		}
 	}
 
 	const handleAddToCart = () => {
@@ -121,7 +178,14 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 		setStep('product')
 		setProfileData({
 			email: '',
-			phone: ''
+			phone: '',
+			firstName: '',
+			lastName: '',
+			street: '',
+			city: '',
+			state: '',
+			zipCode: '',
+			country: 'United States'
 		})
 	}
 
@@ -141,6 +205,30 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 				<form onSubmit={(e) => { e.preventDefault(); handleCompletePurchase() }} className="profile-form">
 					<div className="form-group">
 						<h3>Contact Information</h3>
+						<div className="form-row">
+							<div className="form-field">
+								<label>First Name *</label>
+								<input
+									type="text"
+									name="firstName"
+									value={profileData.firstName}
+									onChange={handleProfileChange}
+									placeholder="John"
+									required
+								/>
+							</div>
+							<div className="form-field">
+								<label>Last Name *</label>
+								<input
+									type="text"
+									name="lastName"
+									value={profileData.lastName}
+									onChange={handleProfileChange}
+									placeholder="Doe"
+									required
+								/>
+							</div>
+						</div>
 						<div className="form-field">
 							<label>Email *</label>
 							<input
@@ -164,6 +252,69 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 						</div>
 					</div>
 
+					<div className="form-group">
+						<h3>Shipping Address</h3>
+						<div className="form-field">
+							<label>Street Address *</label>
+							<input
+								type="text"
+								name="street"
+								value={profileData.street}
+								onChange={handleProfileChange}
+								placeholder="123 Main Street"
+								required
+							/>
+						</div>
+						<div className="form-row">
+							<div className="form-field">
+								<label>City *</label>
+								<input
+									type="text"
+									name="city"
+									value={profileData.city}
+									onChange={handleProfileChange}
+									placeholder="New York"
+									required
+								/>
+							</div>
+							<div className="form-field">
+								<label>State *</label>
+								<input
+									type="text"
+									name="state"
+									value={profileData.state}
+									onChange={handleProfileChange}
+									placeholder="NY"
+									required
+								/>
+							</div>
+						</div>
+						<div className="form-row">
+							<div className="form-field">
+								<label>ZIP Code *</label>
+								<input
+									type="text"
+									name="zipCode"
+									value={profileData.zipCode}
+									onChange={handleProfileChange}
+									placeholder="10001"
+									required
+								/>
+							</div>
+							<div className="form-field">
+								<label>Country *</label>
+								<input
+									type="text"
+									name="country"
+									value={profileData.country}
+									onChange={handleProfileChange}
+									placeholder="United States"
+									required
+								/>
+							</div>
+						</div>
+					</div>
+
 					<div className="modal__footer">
 						<button type="button" className="btn btn--secondary" onClick={() => { resetForm(); onClose() }}>
 							<i className="bi bi-x"></i> Cancel
@@ -172,7 +323,7 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 							<i className="bi bi-arrow-left"></i> Back
 						</button>
 						<button type="submit" className="btn btn--primary">
-							<i className="bi bi-check-circle"></i> Complete Purchase
+							<i className="bi bi-check-circle"></i> Complete Purchase (${total.toFixed(2)})
 						</button>
 					</div>
 				</form>

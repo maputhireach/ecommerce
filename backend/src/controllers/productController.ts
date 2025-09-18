@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { store } from '../models/inMemoryStore';
+import { mongoService } from '../models/mongoService';
 import { CreateProductRequest, UpdateProductRequest, ApiResponse } from '../types';
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await store.getAllProducts();
+    const products = await mongoService.getAllProducts();
     
     res.json({
       success: true,
@@ -23,7 +23,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
 export const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const product = await store.getProductById(id);
+    const product = await mongoService.getProductById(id);
     
     if (!product) {
       return res.status(404).json({
@@ -58,7 +58,7 @@ export const createProduct = async (req: Request, res: Response) => {
       } as ApiResponse<null>);
     }
     
-    const product = await store.createProduct({
+    const product = await mongoService.createProduct({
       ...productData,
       isActive: true
     });
@@ -82,7 +82,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates: UpdateProductRequest = req.body;
     
-    const updatedProduct = await store.updateProduct(id, updates);
+    const updatedProduct = await mongoService.updateProduct(id, updates);
     
     if (!updatedProduct) {
       return res.status(404).json({
@@ -110,7 +110,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     
     // Soft delete by setting isActive to false
-    const updatedProduct = await store.updateProduct(id, { isActive: false });
+    const updatedProduct = await mongoService.updateProduct(id, { isActive: false });
     
     if (!updatedProduct) {
       return res.status(404).json({

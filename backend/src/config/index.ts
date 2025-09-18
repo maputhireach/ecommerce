@@ -15,8 +15,8 @@ export const config = {
   // CORS configuration
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   
-  // Database configuration (we'll add this later)
-  // databaseUrl: process.env.DATABASE_URL,
+  // Database configuration
+  mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce',
   
   // Security
   bcryptRounds: 12,
