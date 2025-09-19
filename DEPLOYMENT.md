@@ -1,103 +1,178 @@
 # 🚀 Deployment Guide
 
+## Quick Start
+
+### 1. Environment Setup
+First, copy the environment template:
+```bash
+cp .env.example .env.local
+```
+
+For production, update `.env.production` with your actual backend URL.
+
+### 2. Local Testing
+```bash
+# Test the production build locally
+npm run build
+npm run preview
+```
+
+### 3. Deploy to GitHub Pages
+1. Push your code to GitHub
+2. Enable GitHub Pages in repository settings
+3. The GitHub Action will automatically deploy on push to main/master
+
 ## Environment Configuration
 
-### For Local Development
-1. Copy `.env.example` to `.env.local`
-2. Update the API URL if your backend runs on a different port:
-   ```
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
+### Development (.env.local)
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_APP_ENV=development
+```
 
-### For Production Deployment
+### Production (.env.production)
+```env
+VITE_API_BASE_URL=https://your-backend-domain.com/api
+VITE_APP_ENV=production
+```
 
-#### Option 1: Same Domain Deployment
-If your frontend and backend are deployed on the same server:
-- Set `VITE_API_BASE_URL=/api` or let it auto-detect
-- The app will automatically use `window.location.origin + '/api'`
+## Deployment Platforms
 
-#### Option 2: Different Domain Deployment
-If your backend is on a different domain:
-1. Set the production API URL:
-   ```
-   VITE_API_BASE_URL=https://your-backend-domain.com/api
-   ```
+### GitHub Pages (Recommended)
+**Setup:**
+1. Go to repository Settings → Pages
+2. Set source to "GitHub Actions"
+3. Add repository secret:
+   - `VITE_API_BASE_URL`: Your backend API URL
 
-## GitHub Pages Deployment
-
-### Setup
-1. Go to your GitHub repository settings
-2. Navigate to "Pages" section
-3. Enable GitHub Actions as the source
-
-### Configure Secrets
-1. Go to Settings → Secrets and variables → Actions
-2. Add a new secret:
-   - Name: `VITE_API_BASE_URL`
-   - Value: `https://your-backend-domain.com/api`
-
-### Deploy
-Push to your main branch and GitHub Actions will automatically build and deploy.
-
-## Other Platforms
+**Auto-deploy:** Pushes to main/master trigger deployment
 
 ### Vercel
 1. Connect your GitHub repository
-2. Add environment variable:
+2. Set environment variables:
    - `VITE_API_BASE_URL`: Your backend API URL
+   - `VITE_APP_ENV`: production
+3. Deploy automatically on push
 
 ### Netlify
-1. Connect your GitHub repository
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Add environment variable:
+1. Connect repository
+2. Build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+3. Environment variables:
    - `VITE_API_BASE_URL`: Your backend API URL
 
 ## Backend Deployment
 
-Your backend also needs to be deployed and accessible. Popular options:
-- **Railway**: Easy Node.js deployment
-- **Render**: Free tier available
-- **Heroku**: Popular choice
-- **DigitalOcean**: VPS option
-- **AWS/GCP/Azure**: Cloud platforms
+Your backend needs to be deployed separately. Popular options:
+
+### Railway (Recommended)
+1. Connect your GitHub repository
+2. Select the `backend` folder
+3. Set environment variables
+4. Deploy automatically
+
+### Render
+1. Create new Web Service
+2. Connect repository
+3. Build command: `cd backend && npm install && npm run build`
+4. Start command: `cd backend && npm start`
+
+### Heroku
+1. Create Heroku app
+2. Set buildpack to Node.js
+3. Configure environment variables
+4. Deploy via Git
 
 ## CORS Configuration
 
-Make sure your backend allows requests from your frontend domain:
+Update your backend CORS settings to include your frontend domain:
 
 ```javascript
-// In your backend
+// backend/src/index.ts
 app.use(cors({
   origin: [
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'https://your-frontend-domain.com'  // Add your production domain
+    'http://localhost:5175',
+    'https://yourusername.github.io',  // GitHub Pages
+    'https://your-frontend-domain.com' // Your production domain
   ],
   credentials: true
 }));
 ```
 
+```
+
 ## Troubleshooting
 
-### "API connection failed" Error
-1. Check if `VITE_API_BASE_URL` is set correctly
-2. Verify backend is accessible from the deployment environment
-3. Check browser console for CORS errors
-4. Ensure backend allows your frontend domain
+### Common Issues
 
-### Environment Variables Not Working
-- Environment variables must start with `VITE_` in Vite
-- Restart dev server after changing environment files
-- Check browser console for the logged API URL
+#### "API connection failed" Error
+1. **Check environment variables:**
+   ```bash
+   echo $VITE_API_BASE_URL  # Should show your API URL
+   ```
+2. **Verify backend is accessible:**
+   - Test: `curl https://your-backend-domain.com/api/health`
+3. **Check browser console for CORS errors**
+4. **Ensure backend allows your frontend domain**
 
-## Testing
+#### Build Failures
+1. **TypeScript errors:**
+   ```bash
+   npm run build  # Shows specific errors
+   ```
+2. **Missing dependencies:**
+   ```bash
+   npm install  # Reinstall dependencies
+   ```
+3. **Environment variable issues:**
+   - Ensure variables start with `VITE_`
+   - Restart dev server after changes
 
-Before deploying, test locally:
+#### GitHub Actions Deployment Fails
+1. **Check repository secrets:**
+   - Go to Settings → Secrets and variables → Actions
+   - Ensure `VITE_API_BASE_URL` is set
+2. **Check workflow logs:**
+   - Go to Actions tab in your repository
+   - Click on failed workflow for details
+
+### Testing Before Deployment
+
 ```bash
-# Build for production
-npm run build
+# 1. Install dependencies
+npm install
+cd backend && npm install && cd ..
 
-# Preview production build
+# 2. Build both frontend and backend
+npm run build
+cd backend && npm run build && cd ..
+
+# 3. Test production build locally
 npm run preview
 ```
+
+### Deployment Checklist
+
+- [ ] Environment variables configured
+- [ ] Backend deployed and accessible
+- [ ] CORS configured for your domain
+- [ ] Frontend builds without errors
+- [ ] Local preview works
+- [ ] Repository secrets set (for GitHub Pages)
+- [ ] GitHub Pages enabled in repository settings
+
+## Support
+
+If you encounter issues:
+1. Check the browser console for errors
+2. Verify network requests in DevTools
+3. Test API endpoints directly
+4. Check deployment platform logs
+
+## Security Notes
+
+- Never commit `.env` files with sensitive data
+- Use repository secrets for production credentials
+- Ensure HTTPS in production
+- Validate all user inputs on the backend
