@@ -72,6 +72,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API health check endpoint (for deployment services)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
+    service: 'ecommerce-backend'
+  });
+});
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({

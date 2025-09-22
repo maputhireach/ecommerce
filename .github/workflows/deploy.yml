@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
@@ -22,21 +22,11 @@ jobs:
     - name: Install frontend dependencies
       run: npm ci
       
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm ci
-        
-    - name: Build backend
-      run: |
-        cd backend
-        npm run build
-        
     - name: Build frontend
       run: npm run build
       env:
-        # Set your production API URL here
-        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || '/api' }}
+        # Use GitHub secret for production API URL
+        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://your-backend-service.onrender.com/api' }}
         VITE_APP_ENV: production
         
     - name: Deploy to GitHub Pages
