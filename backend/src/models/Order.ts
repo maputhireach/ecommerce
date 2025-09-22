@@ -12,15 +12,6 @@ export interface IOrder extends Omit<OrderType, 'id' | 'userId' | 'items'>, Docu
   items: IOrderItem[];
 }
 
-// Address Schema (embedded in Order)
-const addressSchema = new Schema({
-  street: { type: String, required: true },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  zipCode: { type: String, required: true },
-  country: { type: String, required: true }
-}, { _id: false });
-
 // OrderItem Schema (embedded in Order)
 const orderItemSchema = new Schema({
   productId: {
@@ -61,11 +52,7 @@ const orderSchema = new Schema<IOrder>({
     required: true,
     min: 0
   },
-  items: [orderItemSchema],
-  shippingAddress: {
-    type: addressSchema,
-    required: true
-  }
+  items: [orderItemSchema]
 }, {
   timestamps: true, // This adds createdAt and updatedAt automatically
   toJSON: {

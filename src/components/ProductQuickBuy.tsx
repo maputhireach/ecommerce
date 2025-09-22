@@ -15,11 +15,6 @@ type ProfileData = {
 	phone: string
 	firstName: string
 	lastName: string
-	street: string
-	city: string
-	state: string
-	zipCode: string
-	country: string
 }
 
 function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
@@ -61,13 +56,43 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 		email: '',
 		phone: '',
 		firstName: '',
-		lastName: '',
-		street: '',
-		city: '',
-		state: '',
-		zipCode: '',
-		country: 'United States'
+		lastName: ''
 	})
+	const [loadingUserData, setLoadingUserData] = useState<boolean>(false)
+
+	// Load user profile data when component opens
+	useEffect(() => {
+		if (open && ApiService.isAuthenticated()) {
+			loadUserProfile()
+		}
+	}, [open])
+
+	const loadUserProfile = async () => {
+		try {
+			setLoadingUserData(true)
+			const userProfile = await ApiService.getUserProfile()
+			
+			// Auto-fill form with user data
+			setProfileData({
+				email: userProfile.email || '',
+				firstName: userProfile.firstName || '',
+				lastName: userProfile.lastName || '',
+				phone: userProfile.profile?.phone || ''
+			})
+			
+			addNotification({
+				type: 'info',
+				title: 'Info Pre-filled',
+				message: 'Your profile information has been automatically filled in.',
+				duration: 3000
+			})
+		} catch (error) {
+			console.error('Failed to load user profile:', error)
+			// Don't show error notification, just use empty form
+		} finally {
+			setLoadingUserData(false)
+		}
+	}
 
 	const total = useMemo(() => {
 		const price = product?.priceUsd ?? 0
@@ -104,8 +129,7 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 			}
 
 			// Validate required fields
-			if (!profileData.email || !profileData.firstName || !profileData.lastName || 
-			    !profileData.street || !profileData.city || !profileData.state || !profileData.zipCode) {
+			if (!profileData.email || !profileData.firstName || !profileData.lastName) {
 				addNotification({
 					type: 'error',
 					title: 'Missing Information',
@@ -117,19 +141,26 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 
 			if (!product) return
 
+			// Save/update user profile if any information was changed
+			try {
+				await ApiService.updateUserProfile({
+					firstName: profileData.firstName,
+					lastName: profileData.lastName,
+					profile: {
+						phone: profileData.phone
+					}
+				})
+			} catch (profileError) {
+				console.error('Failed to update profile:', profileError)
+				// Continue with order creation even if profile update fails
+			}
+
 			// Create order data
 			const orderData = {
 				items: [{
 					productId: product.id,
 					quantity: quantity
-				}],
-				shippingAddress: {
-					street: profileData.street,
-					city: profileData.city,
-					state: profileData.state,
-					zipCode: profileData.zipCode,
-					country: profileData.country
-				}
+				}]
 			}
 
 			// Create the order
@@ -180,12 +211,7 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 			email: '',
 			phone: '',
 			firstName: '',
-			lastName: '',
-			street: '',
-			city: '',
-			state: '',
-			zipCode: '',
-			country: 'United States'
+			lastName: ''
 		})
 	}
 
@@ -201,6 +227,12 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 						<p className="quickbuy__price">${product.priceUsd.toFixed(2)} × {quantity} = ${total.toFixed(2)}</p>
 					</div>
 				</div>
+				
+				{loadingUserData && (
+					<div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+						<p>Loading your profile information...</p>
+					</div>
+				)}
 				
 				<form onSubmit={(e) => { e.preventDefault(); handleCompletePurchase() }} className="profile-form">
 					<div className="form-group">
@@ -249,69 +281,6 @@ export default function ProductQuickBuy({ open, product, onClose }: Props) {
 								onChange={handleProfileChange}
 								placeholder="+1 (555) 123-4567"
 							/>
-						</div>
-					</div>
-
-					<div className="form-group">
-						<h3>Shipping Address</h3>
-						<div className="form-field">
-							<label>Street Address *</label>
-							<input
-								type="text"
-								name="street"
-								value={profileData.street}
-								onChange={handleProfileChange}
-								placeholder="123 Main Street"
-								required
-							/>
-						</div>
-						<div className="form-row">
-							<div className="form-field">
-								<label>City *</label>
-								<input
-									type="text"
-									name="city"
-									value={profileData.city}
-									onChange={handleProfileChange}
-									placeholder="New York"
-									required
-								/>
-							</div>
-							<div className="form-field">
-								<label>State *</label>
-								<input
-									type="text"
-									name="state"
-									value={profileData.state}
-									onChange={handleProfileChange}
-									placeholder="NY"
-									required
-								/>
-							</div>
-						</div>
-						<div className="form-row">
-							<div className="form-field">
-								<label>ZIP Code *</label>
-								<input
-									type="text"
-									name="zipCode"
-									value={profileData.zipCode}
-									onChange={handleProfileChange}
-									placeholder="10001"
-									required
-								/>
-							</div>
-							<div className="form-field">
-								<label>Country *</label>
-								<input
-									type="text"
-									name="country"
-									value={profileData.country}
-									onChange={handleProfileChange}
-									placeholder="United States"
-									required
-								/>
-							</div>
 						</div>
 					</div>
 

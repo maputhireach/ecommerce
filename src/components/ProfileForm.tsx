@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../contexts/NotificationContext'
 import { ApiService } from '../services/api'
 
@@ -8,6 +9,7 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
+	const navigate = useNavigate()
 	const [isLoginMode, setIsLoginMode] = useState(true)
 	const [isLoggedIn, setIsLoggedIn] = useState(false)
 	const [currentUser, setCurrentUser] = useState<any>(null)
@@ -16,12 +18,7 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 		lastName: '',
 		email: '',
 		password: '',
-		phone: '',
-		address: '',
-		city: '',
-		state: '',
-		zipCode: '',
-		country: ''
+		phone: ''
 	})
 	const { addNotification } = useNotifications()
 
@@ -31,15 +28,36 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 		const authenticated = ApiService.isAuthenticated()
 		setIsLoggedIn(authenticated)
 		setCurrentUser(user)
-		if (user) {
-			setFormData(prev => ({
-				...prev,
-				firstName: user.firstName || '',
-				lastName: user.lastName || '',
-				email: user.email || ''
-			}))
+		if (user && authenticated) {
+			// Load full profile data from API
+			loadUserProfile()
 		}
 	}, [isOpen])
+
+	const loadUserProfile = async () => {
+		try {
+			const userProfile = await ApiService.getUserProfile()
+			setFormData({
+				firstName: userProfile.firstName || '',
+				lastName: userProfile.lastName || '',
+				email: userProfile.email || '',
+				password: '',
+				phone: userProfile.profile?.phone || ''
+			})
+		} catch (error) {
+			console.error('Failed to load user profile:', error)
+			// Fallback to localStorage data
+			const user = ApiService.getCurrentUser()
+			if (user) {
+				setFormData(prev => ({
+					...prev,
+					firstName: user.firstName || '',
+					lastName: user.lastName || '',
+					email: user.email || ''
+				}))
+			}
+		}
+	}
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target
@@ -52,54 +70,125 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		
-		try {
-			if (isLoggedIn) {
-				// Update profile (simplified - just show notification)
-				console.log('Profile updated:', formData)
-				addNotification({
-					type: 'success',
-					title: 'Profile Saved!',
-					message: 'Your profile information has been updated successfully.',
-					duration: 4000
-				})
-			} else if (isLoginMode) {
+		console.log('🚀 Form submission started');
+		console.log('📄 Form data:', { email: formData.email, hasPassword: !!formData.password });
+		console.log('🔄 Is login mode:', isLoginMode);
+		
+			try {
+				if (isLoggedIn) {
+					// Update profile
+					console.log('Profile updated:', formData)
+					
+					await ApiService.updateUserProfile({
+						firstName: formData.firstName,
+						lastName: formData.lastName,
+						profile: {
+							phone: formData.phone
+						}
+					})
+					
+					addNotification({
+						type: 'success',
+						title: 'Profile Saved!',
+						message: 'Your profile information has been updated successfully.',
+						duration: 4000
+					})
+				} else if (isLoginMode) {
 				// Login
+				console.log('🔑 Attempting login...');
+				console.log('📧 Email entered:', `"${formData.email}"`);
+				console.log('🔒 Password length:', formData.password.length);
+				console.log('🧹 Email after trim:', `"${formData.email.trim()}"`);
+				
+				if (!formData.email || !formData.password) {
+					throw new Error('Please fill in both email and password');
+				}
+				
+				// Additional validation
+				const trimmedEmail = formData.email.trim().toLowerCase();
+				if (!trimmedEmail.includes('@')) {
+					throw new Error('Please enter a valid email address');
+				}
+				
 				const result = await ApiService.login({
-					email: formData.email,
+					email: trimmedEmail,
 					password: formData.password
 				})
+				
+				console.log('✅ Login result:', result);
 				setIsLoggedIn(true)
 				setCurrentUser(result.user)
+				
+				// Close modal first
+				onClose()
+				
+				// Show success notification
 				addNotification({
 					type: 'success',
 					title: 'Welcome back!',
 					message: `Hello ${result.user.firstName}! You're now logged in.`,
 					duration: 4000
 				})
+				
+				// Navigate to home page to refresh the view
+				setTimeout(() => {
+					navigate('/', { replace: true })
+				}, 500)
 			} else {
 				// Register
+				console.log('📁 Attempting registration...');
+				
+				if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+					throw new Error('Please fill in all required fields');
+				}
+				
+				if (formData.password.length < 6) {
+					throw new Error('Password must be at least 6 characters long');
+				}
+				
 				const result = await ApiService.register({
-					email: formData.email,
+					email: formData.email.trim(),
 					password: formData.password,
-					firstName: formData.firstName,
-					lastName: formData.lastName
+					firstName: formData.firstName.trim(),
+					lastName: formData.lastName.trim()
 				})
+				
+				console.log('✅ Registration result:', result);
 				setIsLoggedIn(true)
 				setCurrentUser(result.user)
+				
+				// Close modal first
+				onClose()
+				
+				// Show success notification
 				addNotification({
 					type: 'success',
 					title: 'Account Created!',
 					message: `Welcome ${result.user.firstName}! Your account has been created successfully.`,
 					duration: 4000
 				})
+				
+				// Navigate to home page to refresh the view
+				setTimeout(() => {
+					navigate('/', { replace: true })
+				}, 500)
 			}
-			onClose()
 		} catch (error: any) {
+			console.error('❌ Form submission error:', error);
+			
+			let errorMessage = 'Something went wrong. Please try again.';
+			
+			if (error.message) {
+				errorMessage = error.message;
+			} else if (error.response?.data?.error) {
+				errorMessage = error.response.data.error;
+			}
+			
 			addNotification({
 				type: 'error',
-				title: 'Error',
-				message: error.message || 'Something went wrong. Please try again.',
-				duration: 5000
+				title: isLoginMode ? 'Login Failed' : 'Registration Failed',
+				message: errorMessage,
+				duration: 6000
 			})
 		}
 	}
@@ -113,12 +202,7 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 			lastName: '',
 			email: '',
 			password: '',
-			phone: '',
-			address: '',
-			city: '',
-			state: '',
-			zipCode: '',
-			country: ''
+			phone: ''
 		})
 		addNotification({
 			type: 'info',
@@ -192,59 +276,6 @@ export default function ProfileForm({ isOpen, onClose }: ProfileFormProps) {
 										value={formData.phone}
 										onChange={handleChange}
 									/>
-								</div>
-							</div>
-
-							<div className="form-group">
-								<h3>Address</h3>
-								<div className="form-field">
-									<label>Street Address</label>
-									<input
-										type="text"
-										name="address"
-										value={formData.address}
-										onChange={handleChange}
-									/>
-								</div>
-								<div className="form-row">
-									<div className="form-field">
-										<label>City</label>
-										<input
-											type="text"
-											name="city"
-											value={formData.city}
-											onChange={handleChange}
-										/>
-									</div>
-									<div className="form-field">
-										<label>State</label>
-										<input
-											type="text"
-											name="state"
-											value={formData.state}
-											onChange={handleChange}
-										/>
-									</div>
-								</div>
-								<div className="form-row">
-									<div className="form-field">
-										<label>ZIP Code</label>
-										<input
-											type="text"
-											name="zipCode"
-											value={formData.zipCode}
-											onChange={handleChange}
-										/>
-									</div>
-									<div className="form-field">
-										<label>Country</label>
-										<input
-											type="text"
-											name="country"
-											value={formData.country}
-											onChange={handleChange}
-										/>
-									</div>
 								</div>
 							</div>
 

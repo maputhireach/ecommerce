@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { mongoService } from '../models/mongoService';
-import { CreateOrderRequest, ApiResponse, OrderStatus } from '../types';
+import { ApiResponse, OrderStatus } from '../types';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { items, shippingAddress }: CreateOrderRequest = req.body;
+    const { items }: { items: Array<{ productId: string; quantity: number }> } = req.body;
     const userId = req.user!.id;
 
     if (!items || items.length === 0) {
@@ -52,8 +52,7 @@ export const createOrder = async (req: Request, res: Response) => {
         ...item,
         id: '', // This will be set by the store
         orderId: '' // This will be set by the store
-      })),
-      shippingAddress
+      }))
     });
 
     // Update stock quantities

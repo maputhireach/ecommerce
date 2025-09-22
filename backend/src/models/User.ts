@@ -32,6 +32,12 @@ const userSchema = new Schema<IUser>({
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  profile: {
+    phone: {
+      type: String,
+      trim: true
+    }
   }
 }, {
   timestamps: true, // This adds createdAt and updatedAt automatically

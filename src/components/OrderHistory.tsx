@@ -8,7 +8,6 @@ export default function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const { addNotification } = useNotifications()
 
   useEffect(() => {
@@ -24,24 +23,26 @@ export default function OrderHistory() {
 
         const fetchedOrders = await ApiService.getUserOrders()
         
-        // Convert date strings to Date objects and ensure status is properly typed
-        const processedOrders = fetchedOrders.map((order: any) => ({
-          ...order,
-          createdAt: new Date(order.createdAt),
-          updatedAt: new Date(order.updatedAt),
-          status: order.status as OrderStatus
-        }))
+        if (!fetchedOrders || !Array.isArray(fetchedOrders)) {
+          setOrders([])
+          return
+        }
+        
+        // Process orders with safe handling
+        const processedOrders = fetchedOrders.map((order: any) => {
+          return {
+            ...order,
+            id: order._id || order.id,
+            createdAt: new Date(order.createdAt),
+            updatedAt: new Date(order.updatedAt),
+            status: order.status as OrderStatus
+          }
+        })
         
         setOrders(processedOrders)
       } catch (err) {
         console.error('Failed to fetch orders:', err)
         setError('Failed to load order history')
-        addNotification({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to load order history',
-          duration: 4000
-        })
       } finally {
         setLoading(false)
       }
@@ -49,10 +50,6 @@ export default function OrderHistory() {
 
     fetchOrders()
   }, [addNotification])
-
-  const filteredOrders = statusFilter === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === statusFilter)
 
   const getStatusBadgeColor = (status: OrderStatus) => {
     switch (status) {
@@ -64,12 +61,16 @@ export default function OrderHistory() {
         return 'bg-purple-600'
       case OrderStatus.DELIVERED:
         return 'bg-green-600'
+      case OrderStatus.COMPLETED:
+        return 'bg-green-700'
       case OrderStatus.CANCELLED:
         return 'bg-red-600'
       default:
         return 'bg-gray-600'
     }
   }
+
+
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -98,22 +99,6 @@ export default function OrderHistory() {
     <div className="order-history">
       <div className="order-history__header">
         <h2 className="section-title">Order History</h2>
-        
-        {/* Status Filter */}
-        <div className="order-history__filters">
-          <select 
-            className="order-history__filter-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'all')}
-          >
-            <option value="all">All Orders</option>
-            <option value={OrderStatus.PENDING}>Pending</option>
-            <option value={OrderStatus.CONFIRMED}>Confirmed</option>
-            <option value={OrderStatus.SHIPPED}>Shipped</option>
-            <option value={OrderStatus.DELIVERED}>Delivered</option>
-            <option value={OrderStatus.CANCELLED}>Cancelled</option>
-          </select>
-        </div>
       </div>
 
       {loading && (
@@ -128,23 +113,19 @@ export default function OrderHistory() {
         </div>
       )}
 
-      {!loading && !error && filteredOrders.length === 0 && (
+      {!loading && !error && orders.length === 0 && (
         <div className="order-history__empty">
-          {statusFilter === 'all' ? (
-            <p>You haven't placed any orders yet.</p>
-          ) : (
-            <p>No orders found with status: {statusFilter}</p>
-          )}
+          <p>You haven't placed any orders yet.</p>
         </div>
       )}
 
-      {!loading && !error && filteredOrders.length > 0 && (
+      {!loading && !error && orders.length > 0 && (
         <div className="order-history__list">
-          {filteredOrders.map((order) => (
-            <div key={order.id} className="order-card">
+          {orders.map((order, index) => (
+            <div key={order.id || order._id || index} className="order-card">
               <div className="order-card__header">
                 <div className="order-card__info">
-                  <h3 className="order-card__id">Order #{order.id.slice(-8).toUpperCase()}</h3>
+                  <h3 className="order-card__id">Order #{order.id ? order.id.toString().slice(-8).toUpperCase() : 'UNKNOWN'}</h3>
                   <p className="order-card__date">{formatDate(order.createdAt)}</p>
                 </div>
                 <div className="order-card__status">
@@ -155,22 +136,22 @@ export default function OrderHistory() {
               </div>
 
               <div className="order-card__items">
-                <h4>Items ({order.items.length})</h4>
+                <h4>Items ({order.items ? order.items.length : 0})</h4>
                 <div className="order-items">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="order-item">
+                  {order.items && order.items.map((item, itemIndex) => (
+                    <div key={item.id || item._id || itemIndex} className="order-item">
                       <img 
-                        src={item.product.imageUrl} 
-                        alt={item.product.name}
+                        src={item.product?.imageUrl || '/assets/img/placeholder.jpg'} 
+                        alt={item.product?.name || 'Product'}
                         className="order-item__image"
                         onError={(e) => {
                           e.currentTarget.src = '/assets/img/placeholder.jpg'
                         }}
                       />
                       <div className="order-item__details">
-                        <p className="order-item__name">{item.product.name}</p>
-                        <p className="order-item__quantity">Qty: {item.quantity}</p>
-                        <p className="order-item__price">${item.priceAtTime.toFixed(2)} each</p>
+                        <p className="order-item__name">{item.product?.name || 'Unknown Product'}</p>
+                        <p className="order-item__quantity">Qty: {item.quantity || 0}</p>
+                        <p className="order-item__price">${(item.priceAtTime || 0).toFixed(2)} each</p>
                       </div>
                     </div>
                   ))}
@@ -179,10 +160,7 @@ export default function OrderHistory() {
 
               <div className="order-card__footer">
                 <div className="order-card__total">
-                  <strong>Total: ${order.totalAmount.toFixed(2)}</strong>
-                </div>
-                <div className="order-card__shipping">
-                  <p>Ship to: {order.shippingAddress.street}, {order.shippingAddress.city}</p>
+                  <strong>Total: ${(order.totalAmount || 0).toFixed(2)}</strong>
                 </div>
               </div>
             </div>

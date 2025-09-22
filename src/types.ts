@@ -3,11 +3,13 @@ export enum OrderStatus {
   CONFIRMED = 'confirmed',
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
+  COMPLETED = 'completed',
   CANCELLED = 'cancelled'
 }
 
 export type Product = {
   id: string
+  _id?: string // MongoDB ObjectId
   name: string
   description?: string
   priceUsd: number
@@ -26,25 +28,30 @@ export type CartItem = {
 
 export type User = {
   id: string
+  _id?: string // MongoDB ObjectId
   email: string
   firstName: string
   lastName: string
   isAdmin: boolean
+  profile?: {
+    phone?: string
+  }
 }
 
 export type Order = {
   id: string
+  _id?: string // MongoDB ObjectId
   userId: string
   status: OrderStatus
   totalAmount: number
   items: OrderItem[]
-  shippingAddress: Address
   createdAt: Date
   updatedAt: Date
 }
 
 export type OrderItem = {
   id: string
+  _id?: string // MongoDB ObjectId
   orderId: string
   productId: string
   quantity: number
@@ -52,12 +59,5 @@ export type OrderItem = {
   product: Product
 }
 
-export type Address = {
-  street: string
-  city: string
-  state: string
-  zipCode: string
-  country: string
-}
 
 

@@ -15,7 +15,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here-cha
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174', 
+    'http://localhost:5175',
+    'http://localhost:5176',
+    'http://localhost:5177',
+    'http://localhost:3000'
+  ],
   credentials: true
 }));
 app.use(morgan('combined'));
@@ -49,7 +56,7 @@ const Product = mongoose.model('Product', productSchema);
 // Simple Order Schema
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  status: { type: String, enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled'], default: 'pending' },
   totalAmount: { type: Number, required: true },
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -307,6 +314,51 @@ app.get('/api/orders/my-orders', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Get user orders error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Update order status (admin functionality)
+app.put('/api/orders/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid order status'
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { 
+        status: status,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: updatedOrder,
+      message: 'Order status updated successfully'
+    });
+  } catch (error) {
+    console.error('Update order status error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

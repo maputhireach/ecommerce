@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { mongoService } from '../models/mongoService';
 import { config } from '../config';
-import { UserLoginRequest, UserRegisterRequest, ApiResponse } from '../types';
+import { UserLoginRequest, UserRegisterRequest, UserProfileUpdateRequest, ApiResponse } from '../types';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -101,6 +101,85 @@ export const login = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse<null>);
+  }
+};
+
+// Get current user profile
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      } as ApiResponse<null>);
+    }
+
+    const user = await mongoService.findUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      } as ApiResponse<null>);
+    }
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.json({
+      success: true,
+      data: userWithoutPassword,
+      message: 'Profile retrieved successfully'
+    } as ApiResponse<any>);
+
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse<null>);
+  }
+};
+
+// Update user profile
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      } as ApiResponse<null>);
+    }
+
+    const { firstName, lastName, profile }: UserProfileUpdateRequest = req.body;
+
+    const updates: any = {};
+    if (firstName) updates.firstName = firstName;
+    if (lastName) updates.lastName = lastName;
+    if (profile) updates.profile = profile;
+
+    const updatedUser = await mongoService.updateUser(req.user.id, updates);
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      } as ApiResponse<null>);
+    }
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = updatedUser;
+
+    res.json({
+      success: true,
+      data: userWithoutPassword,
+      message: 'Profile updated successfully'
+    } as ApiResponse<any>);
+
+  } catch (error) {
+    console.error('Update profile error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

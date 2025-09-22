@@ -6,8 +6,13 @@ export interface User {
   firstName: string;
   lastName: string;
   isAdmin: boolean;
+  profile?: UserProfile; // Optional profile information
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserProfile {
+  phone?: string;
 }
 
 export interface UserLoginRequest {
@@ -20,6 +25,12 @@ export interface UserRegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+}
+
+export interface UserProfileUpdateRequest {
+  firstName?: string;
+  lastName?: string;
+  profile?: UserProfile;
 }
 
 // Product Types (Extended from frontend)
@@ -62,7 +73,6 @@ export interface Order {
   status: OrderStatus;
   totalAmount: number;
   items: OrderItem[];
-  shippingAddress: Address;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,16 +88,8 @@ export interface OrderItem {
 
 export interface CreateOrderRequest {
   items: { productId: string; quantity: number }[];
-  shippingAddress: Address;
 }
 
-export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
 
 export enum OrderStatus {
   PENDING = 'pending',
