@@ -29,6 +29,14 @@ export default defineConfig(({ mode }) => {
           }
         }
       }
+    },
+    // Add Node.js compatibility
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom']
+    },
+    // CSS configuration to prevent crypto hash issues
+    css: {
+      devSourcemap: true
     }
   }
 })
