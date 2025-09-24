@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useCart } from '../contexts/CartContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { ApiService } from '../services/api'
+import { OrderService } from '../services/orderService'
 
 interface CheckoutModalProps {
   isOpen: boolean
@@ -9,7 +9,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { items, subtotal } = useCart()
+  const { items, subtotal, clearCart } = useCart()
   const { addNotification } = useNotifications()
   const [loading, setLoading] = useState(false)
 
@@ -17,16 +17,6 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!ApiService.isAuthenticated()) {
-      addNotification({
-        type: 'error',
-        title: 'Authentication Required',
-        message: 'Please login to place an order.',
-        duration: 5000
-      })
-      return
-    }
-
     if (items.length === 0) {
       addNotification({
         type: 'error',
@@ -39,36 +29,33 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
     setLoading(true)
     
-    try {
-      const orderData = {
-        items: items.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity
-        }))
-      }
-
-      const order = await ApiService.createOrder(orderData)
+    // Simulate order processing delay
+    setTimeout(() => {
+      // Create order in localStorage
+      const orderItems = items.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        productImage: item.product.imageUrl,
+        quantity: item.quantity,
+        price: item.product.priceUsd
+      }))
+      
+      const order = OrderService.createOrder(orderItems)
       
       addNotification({
         type: 'success',
         title: 'Order Placed Successfully!',
-        message: `Your order #${order._id} has been placed and saved to your account.`,
+        message: `Your order #${order.id} has been placed! Total: $${subtotal.toFixed(2)}`,
         duration: 6000
       })
       
-      // Clear form and close modal
-      onClose()
+      // Clear cart after successful order
+      clearCart()
       
-    } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Order Failed',
-        message: error.message || 'Failed to place order. Please try again.',
-        duration: 5000
-      })
-    } finally {
+      // Clear form and close modal
       setLoading(false)
-    }
+      onClose()
+    }, 1000)
   }
 
   if (!isOpen) return null

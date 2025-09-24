@@ -4,7 +4,6 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import ProductsGrid from './components/ProductsGrid'
 import OrderHistory from './components/OrderHistory'
-import AdminOrders from './components/AdminOrders'
 import Footer from './components/Footer'
 import { CartProvider } from './contexts/CartContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -31,7 +30,6 @@ export default function App() {
 						<Routes>
 							<Route path="/" element={<HomePage />} />
 							<Route path="/orders" element={<OrderHistory />} />
-							<Route path="/admin" element={<AdminOrders />} />
 						</Routes>
 					</main>
 					<Footer />

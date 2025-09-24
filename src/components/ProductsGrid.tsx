@@ -3,7 +3,6 @@ import type { Product } from '../types.ts'
 import ProductQuickBuy from './ProductQuickBuy'
 import { useCart } from '../contexts/CartContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { ApiService } from '../services/api'
 
 export default function ProductsGrid() {
 	const { addItem, openCart } = useCart()
@@ -12,89 +11,70 @@ export default function ProductsGrid() {
 	const [isQuickBuyOpen, setIsQuickBuyOpen] = useState(false)
 	const [products, setProducts] = useState<Product[]>([])
 	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
 
-	// Fetch products from backend
+	// Load static products data
 	useEffect(() => {
-		const fetchProducts = async () => {
-			try {
-				setLoading(true)
-				setError(null)
-				console.log('Fetching products from API...')
-				
-				const fetchedProducts = await ApiService.getProducts()
-				console.log('Products fetched:', fetchedProducts)
-				
-				if (fetchedProducts && fetchedProducts.length > 0) {
-					setProducts(fetchedProducts)
-					console.log('Products set successfully')
-				} else {
-					throw new Error('No products received from API')
+		const loadProducts = () => {
+			setLoading(true)
+			
+			// Static product data
+			setProducts([
+				{
+					id: '1',
+					name: 'Classic Tee — Black',
+					description: 'Comfortable premium cotton t-shirt in classic black',
+					priceUsd: 24.99,
+					imageUrl: '/assets/img/1.jpg',
+					stockQuantity: 50,
+					category: 'Clothing',
+					isActive: true
+				},
+				{
+					id: '2',
+					name: 'Classic Tee — White',
+					description: 'Premium cotton t-shirt in crisp white color',
+					priceUsd: 22.99,
+					imageUrl: '/assets/img/2.jpg',
+					stockQuantity: 45,
+					category: 'Clothing',
+					isActive: true
+				},
+				{
+					id: '3',
+					name: 'Heavyweight Tee',
+					description: 'Durable heavyweight cotton t-shirt for lasting comfort',
+					priceUsd: 29.99,
+					imageUrl: '/assets/img/3.jpg',
+					stockQuantity: 30,
+					category: 'Clothing',
+					isActive: true
+				},
+				{
+					id: '4',
+					name: 'Long Sleeve Premium',
+					description: 'Premium long sleeve shirt perfect for layering',
+					priceUsd: 32.99,
+					imageUrl: '/assets/img/4.jpg',
+					stockQuantity: 35,
+					category: 'Clothing',
+					isActive: true
+				},
+				{
+					id: '5',
+					name: 'Designer Collection Tee',
+					description: 'Limited edition designer t-shirt with premium finish',
+					priceUsd: 39.99,
+					imageUrl: '/assets/img/5.jpg',
+					stockQuantity: 25,
+					category: 'Clothing',
+					isActive: true
 				}
-			} catch (err) {
-				console.error('Failed to fetch products:', err)
-				console.log('API Base URL:', 'http://localhost:5000/api')
-				setError(`API connection failed - Using sample data. Check if backend is running on port 5000.`)
-				
-				// Fallback to sample data if API fails
-				setProducts([
-					{
-						id: '1',
-						name: 'Classic Tee — Black',
-						description: 'Comfortable premium cotton t-shirt in classic black',
-						priceUsd: 24.99,
-						imageUrl: '/assets/img/1.jpg',
-						stockQuantity: 50,
-						category: 'Clothing',
-						isActive: true
-					},
-					{
-						id: '2',
-						name: 'Classic Tee — White',
-						description: 'Premium cotton t-shirt in crisp white color',
-						priceUsd: 22.99,
-						imageUrl: '/assets/img/2.jpg',
-						stockQuantity: 45,
-						category: 'Clothing',
-						isActive: true
-					},
-					{
-						id: '3',
-						name: 'Heavyweight Tee',
-						description: 'Durable heavyweight cotton t-shirt for lasting comfort',
-						priceUsd: 29.99,
-						imageUrl: '/assets/img/3.jpg',
-						stockQuantity: 30,
-						category: 'Clothing',
-						isActive: true
-					},
-					{
-						id: '4',
-						name: 'Long Sleeve Premium',
-						description: 'Premium long sleeve shirt perfect for layering',
-						priceUsd: 32.99,
-						imageUrl: '/assets/img/4.jpg',
-						stockQuantity: 35,
-						category: 'Clothing',
-						isActive: true
-					},
-					{
-						id: '5',
-						name: 'Designer Collection Tee',
-						description: 'Limited edition designer t-shirt with premium finish',
-						priceUsd: 39.99,
-						imageUrl: '/assets/img/5.jpg',
-						stockQuantity: 25,
-						category: 'Clothing',
-						isActive: true
-					}
-				])
-			} finally {
-				setLoading(false)
-			}
+			])
+			
+			setLoading(false)
 		}
 
-		fetchProducts()
+		loadProducts()
 	}, [])
 
 	const scrollLeft = () => {
@@ -127,11 +107,6 @@ export default function ProductsGrid() {
 	return (
 		<section id="products" className="products">
 			<h2 className="section-title">Featured Products</h2>
-			{error && (
-				<div style={{ textAlign: 'center', padding: '1rem', color: '#f59e0b' }}>
-					⚠️ {error}
-				</div>
-			)}
 			{loading ? (
 				<div style={{ textAlign: 'center', padding: '2rem' }}>
 					<div>Loading products...</div>

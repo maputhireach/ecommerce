@@ -16,6 +16,7 @@ type CartContextValue = {
 	addItem: (product: Product, quantity?: number) => void
 	removeItem: (productId: string) => void
 	setQuantity: (productId: string, quantity: number) => void
+	clearCart: () => void
 	subtotal: number
 }
 
@@ -90,6 +91,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 		}
 	}
 
+	function clearCart() {
+		const itemCount = items.length
+		setItems([])
+		
+		// Show notification
+		if (itemCount > 0) {
+			addNotification({
+				type: 'info',
+				title: 'Cart Cleared',
+				message: `Removed ${itemCount} item${itemCount !== 1 ? 's' : ''} from your cart.`,
+				duration: 3000
+			})
+		}
+	}
+
 	const subtotal = useMemo(() => {
 		return items.reduce((sum, it) => sum + it.product.priceUsd * it.quantity, 0)
 	}, [items])
@@ -103,6 +119,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 		addItem,
 		removeItem,
 		setQuantity,
+		clearCart,
 		subtotal,
 	}
 
